@@ -22,4 +22,3 @@ This project is an **Airflow Observability Platform** designed to monitor, analy
 3. Raw metadata is loaded into an observability database
 4. dbt transforms raw data into analytics models
 5. Dashboards visualize pipeline health and trends
-
