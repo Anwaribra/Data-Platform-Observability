@@ -1,0 +1,163 @@
+version: 2
+
+models:
+  # Staging Models
+  - name: stg_dag_runs
+    description: "Staging model for DAG runs with cleaned and calculated fields"
+    columns:
+      - name: dag_id
+        description: "DAG identifier"
+        tests:
+          - not_null
+          - unique
+      - name: execution_date
+        description: "Date and time when the DAG was scheduled to run"
+        tests:
+          - not_null
+      - name: state
+        description: "State of the DAG run"
+      - name: calculated_duration
+        description: "Calculated duration in seconds (uses duration field or calculates from start/end dates)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+  
+  - name: stg_task_instances
+    description: "Staging model for task instances with cleaned and calculated fields"
+    columns:
+      - name: dag_id
+        description: "DAG identifier"
+        tests:
+          - not_null
+      - name: task_id
+        description: "Task identifier"
+        tests:
+          - not_null
+      - name: execution_date
+        description: "Date and time when the task was scheduled to run"
+        tests:
+          - not_null
+      - name: state
+        description: "State of the task instance"
+      - name: calculated_duration
+        description: "Calculated duration in seconds"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
+      - name: try_number
+        description: "Number of attempts for this task"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              inclusive: true
+
+  # Mart Models
+  - name: dag_runtime_metrics
+    description: |
+      Daily aggregated metrics for DAG runtime performance.
+      Includes average, min, max, median, and P95 duration statistics.
+    columns:
+      - name: dag_id
+        description: "DAG identifier"
+        tests:
+          - not_null
+      - name: execution_day
+        description: "Day of execution (date truncated)"
+        tests:
+          - not_null
+      - name: total_runs
+        description: "Total number of DAG runs on this day"
+      - name: successful_runs
+        description: "Number of successful runs"
+      - name: failed_runs
+        description: "Number of failed runs"
+      - name: avg_duration_seconds
+        description: "Average duration in seconds"
+      - name: median_duration_seconds
+        description: "Median duration in seconds"
+      - name: p95_duration_seconds
+        description: "95th percentile duration in seconds"
+  
+  - name: dag_failure_rates
+    description: |
+      Daily failure rates per DAG with rolling averages.
+      Tracks success and failure rates over time.
+    columns:
+      - name: dag_id
+        description: "DAG identifier"
+        tests:
+          - not_null
+      - name: execution_day
+        description: "Day of execution"
+        tests:
+          - not_null
+      - name: failure_rate_percent
+        description: "Percentage of failed runs on this day"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+              inclusive: true
+      - name: success_rate_percent
+        description: "Percentage of successful runs on this day"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+              inclusive: true
+  
+  - name: slowest_tasks
+    description: |
+      Top 10 slowest tasks ranked by average duration.
+      Includes execution counts, duration statistics, and failure rates.
+    columns:
+      - name: dag_id
+        description: "DAG identifier"
+        tests:
+          - not_null
+      - name: task_id
+        description: "Task identifier"
+        tests:
+          - not_null
+      - name: avg_duration_seconds
+        description: "Average duration in seconds"
+      - name: max_duration_seconds
+        description: "Maximum duration in seconds"
+      - name: p95_duration_seconds
+        description: "95th percentile duration in seconds"
+      - name: failure_rate_percent
+        description: "Percentage of failed executions"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+              inclusive: true
+  
+  - name: sla_misses
+    description: |
+      SLA miss tracking for both DAGs and tasks.
+      Identifies when execution times exceed defined thresholds.
+    columns:
+      - name: entity_type
+        description: "Type of entity (dag or task)"
+        tests:
+          - accepted_values:
+              values: ['dag', 'task']
+      - name: dag_id
+        description: "DAG identifier"
+        tests:
+          - not_null
+      - name: execution_day
+        description: "Day of execution"
+        tests:
+          - not_null
+      - name: sla_miss_rate_percent
+        description: "Percentage of SLA misses"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+              inclusive: true
+

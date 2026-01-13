@@ -1,0 +1,32 @@
+name: 'airflow_observability'
+version: '1.0.0'
+config-version: 2
+
+profile: 'observability'
+
+model-paths: ["."]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  airflow_observability:
+    staging:
+      +materialized: view
+      +tags: ["staging"]
+    marts:
+      +materialized: table
+      +tags: ["marts"]
+
+vars:
+  sla_threshold_critical: 3600
+  sla_threshold_daily: 7200
+  sla_threshold_default: 10800
+

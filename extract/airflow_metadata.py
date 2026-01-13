@@ -8,7 +8,6 @@ from airflow.models import DagRun, TaskInstance
 from airflow import settings
 
 logger = logging.getLogger(__name__)
-
 class AirflowMetadataExtractor:
     def __init__(self, observability_conn_id: str = 'observability_postgres'):
         self.observability_conn_id = observability_conn_id
@@ -30,7 +29,13 @@ class AirflowMetadataExtractor:
         
         session = settings.Session()
         try:
-            query = session.query(DagRun)
+            query = session.query(
+                DagRun.dag_id,
+                DagRun.execution_date,
+                DagRun.state,
+                DagRun.start_date,
+                DagRun.end_date
+            )
             
             if start_date:
                 query = query.filter(DagRun.execution_date >= start_date)
@@ -41,23 +46,18 @@ class AirflowMetadataExtractor:
             
             dag_run_data = []
             for dr in dag_runs:
+                # Calculate duration in seconds
+                duration = None
+                if dr.start_date and dr.end_date:
+                    duration = (dr.end_date - dr.start_date).total_seconds()
+                
                 dag_run_data.append({
                     'dag_id': dr.dag_id,
-                    'run_id': dr.run_id,
                     'execution_date': dr.execution_date,
                     'state': dr.state,
-                    'run_type': dr.run_type,
-                    'conf': str(dr.conf) if dr.conf else None,
                     'start_date': dr.start_date,
                     'end_date': dr.end_date,
-                    'data_interval_start': dr.data_interval_start,
-                    'data_interval_end': dr.data_interval_end,
-                    'last_scheduling_decision': dr.last_scheduling_decision,
-                    'dag_hash': dr.dag_hash,
-                    'creating_job_id': dr.creating_job_id,
-                    'external_trigger': dr.external_trigger,
-                    'run_note': dr.run_note,
-                    'log_template_id': dr.log_template_id,
+                    'duration': duration,
                     'extracted_at': datetime.utcnow()
                 })
             
@@ -77,7 +77,16 @@ class AirflowMetadataExtractor:
         
         session = settings.Session()
         try:
-            query = session.query(TaskInstance)
+            query = session.query(
+                TaskInstance.dag_id,
+                TaskInstance.task_id,
+                TaskInstance.execution_date,
+                TaskInstance.state,
+                TaskInstance.start_date,
+                TaskInstance.end_date,
+                TaskInstance.duration,
+                TaskInstance.try_number
+            )
             
             if start_date:
                 query = query.filter(TaskInstance.execution_date >= start_date)
@@ -89,29 +98,14 @@ class AirflowMetadataExtractor:
             task_instance_data = []
             for ti in task_instances:
                 task_instance_data.append({
-                    'task_id': ti.task_id,
                     'dag_id': ti.dag_id,
-                    'run_id': ti.run_id,
+                    'task_id': ti.task_id,
                     'execution_date': ti.execution_date,
+                    'state': ti.state,
                     'start_date': ti.start_date,
                     'end_date': ti.end_date,
                     'duration': ti.duration,
-                    'state': ti.state,
                     'try_number': ti.try_number,
-                    'max_tries': ti.max_tries,
-                    'hostname': ti.hostname,
-                    'unixname': ti.unixname,
-                    'job_id': ti.job_id,
-                    'pool': ti.pool,
-                    'pool_slots': ti.pool_slots,
-                    'queue': ti.queue,
-                    'priority_weight': ti.priority_weight,
-                    'operator': ti.operator,
-                    'queued_dttm': ti.queued_dttm,
-                    'queued_by_job_id': ti.queued_by_job_id,
-                    'pid': ti.pid,
-                    'updated_at': ti.updated_at,
-                    'rendered_fields': str(ti.rendered_fields) if ti.rendered_fields else None,
                     'extracted_at': datetime.utcnow()
                 })
             

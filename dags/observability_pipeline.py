@@ -32,22 +32,11 @@ dag = DAG(
     catchup=False,
     tags=['observability', 'metadata', 'data-quality'],
     doc_md="""
-    # Airflow Observability Pipeline
-    
-    This DAG extracts metadata from Airflow's metadata database and loads it
-    into an observability PostgreSQL database for monitoring and analysis.
-    
     ## Tasks
     
     1. **extract_airflow_metadata**: Extracts dag_run and task_instance metadata
     2. **run_data_quality_checks**: Runs data quality checks on loaded data
     
-    ## Configuration
-    
-    - Requires Airflow connection: `observability_postgres`
-    - Connection should point to the observability PostgreSQL database
-    - Tables created automatically: `dag_runs`, `task_instances`
-
     """,
 )
 

@@ -1,0 +1,57 @@
+version: 2
+
+sources:
+  - name: observability
+    description: "Raw observability data extracted from Airflow metadata database"
+    schema: public
+    tables:
+      - name: dag_runs
+        description: "Raw DAG run metadata extracted from Airflow"
+        columns:
+          - name: dag_id
+            description: "DAG identifier"
+            tests:
+              - not_null
+          - name: execution_date
+            description: "Date and time when the DAG was scheduled to run"
+            tests:
+              - not_null
+          - name: state
+            description: "State of the DAG run (success, failed, running, etc.)"
+          - name: start_date
+            description: "When the DAG run started"
+          - name: end_date
+            description: "When the DAG run ended"
+          - name: duration
+            description: "Duration of the DAG run in seconds"
+          - name: extracted_at
+            description: "Timestamp when the record was extracted"
+      
+      - name: task_instances
+        description: "Raw task instance metadata extracted from Airflow"
+        columns:
+          - name: dag_id
+            description: "DAG identifier"
+            tests:
+              - not_null
+          - name: task_id
+            description: "Task identifier"
+            tests:
+              - not_null
+          - name: execution_date
+            description: "Date and time when the task was scheduled to run"
+            tests:
+              - not_null
+          - name: state
+            description: "State of the task instance (success, failed, running, etc.)"
+          - name: start_date
+            description: "When the task started"
+          - name: end_date
+            description: "When the task ended"
+          - name: duration
+            description: "Duration of the task in seconds"
+          - name: try_number
+            description: "Number of attempts for this task"
+          - name: extracted_at
+            description: "Timestamp when the record was extracted"
+

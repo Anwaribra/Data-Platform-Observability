@@ -54,7 +54,7 @@ class DataQualityChecker:
                 }
                 
                 if passed:
-                    logger.info(f"✓ {check_name}: PASSED - {row_count} rows")
+                    logger.info(f" {check_name}: PASSED - {row_count} rows")
                 else:
                     logger.warning(f"✗ {check_name}: FAILED - {row_count} rows (expected >= {min_rows})")
                 
@@ -76,17 +76,7 @@ class DataQualityChecker:
     
     def check_null_values(self, table_name: str, column_name: str, 
                          max_null_percentage: float = 0.0) -> Dict[str, any]:
-        """
-        Check for null values in a column.
-        ---
-        Args:
-            table_name: Table to check
-            column_name: Column to check
-            max_null_percentage: Maximum allowed null percentage (0.0 to 1.0)
-            
-        Returns:
-            Dictionary with check results
-        """
+
         check_name = f"null_check_{table_name}_{column_name}"
         try:
             engine = self._get_observability_connection()
@@ -152,17 +142,7 @@ class DataQualityChecker:
     
     def check_data_freshness(self, table_name: str, timestamp_column: str = 'extracted_at',
                            max_age_hours: int = 25) -> Dict[str, any]:
-        """
-        Check if data is fresh (recently updated).
-        
-        Args:
-            table_name: Table to check
-            timestamp_column: Column containing timestamp
-            max_age_hours: Maximum age in hours
-            
-        Returns:
-            Dictionary with check results
-        """
+
         check_name = f"freshness_check_{table_name}"
         try:
             engine = self._get_observability_connection()
@@ -182,7 +162,7 @@ class DataQualityChecker:
                     self.check_results.append(result_dict)
                     return result_dict
                 
-                # Calculate age
+            
                 from datetime import datetime, timezone
                 if isinstance(max_timestamp, str):
                     max_timestamp = pd.to_datetime(max_timestamp)
@@ -199,7 +179,6 @@ class DataQualityChecker:
                     'max_allowed_hours': max_age_hours,
                     'message': f"Data freshness: {age_hours:.2f} hours old (max allowed: {max_age_hours} hours)"
                 }
-                
                 if passed:
                     logger.info(f"✓ {check_name}: PASSED - Data is {age_hours:.2f} hours old")
                 else:
@@ -222,15 +201,9 @@ class DataQualityChecker:
             return result_dict
     
     def run_all_checks(self) -> Dict[str, any]:
-        """
-        Run all data quality checks.
-        
-        Returns:
-            Dictionary with overall results
-        """
+
         logger.info("Starting data quality checks")
-        
-        # Check if tables exist
+    
         dag_runs_exists = self.check_table_exists('dag_runs')
         task_instances_exists = self.check_table_exists('task_instances')
         
